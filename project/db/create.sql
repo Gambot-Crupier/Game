@@ -1,0 +1,3 @@
+CREATE DATABASE games_prod;
+CREATE DATABASE games_dev;
+CREATE DATABASE games_test;
