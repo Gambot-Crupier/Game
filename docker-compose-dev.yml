@@ -18,6 +18,8 @@ services:
       - DATABASE_TEST_URL=postgres://postgres:postgres@db:5432/games_test
     depends_on:
       - db
+    networks: 
+      - gambotnetwork
     
   db:
     container_name: gambot_game_db
@@ -29,3 +31,10 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    networks: 
+      - gambotnetwork
+
+networks:
+  gambotnetwork:
+    external: true
+    driver: "bridge"
