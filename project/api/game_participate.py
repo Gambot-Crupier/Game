@@ -8,35 +8,77 @@ from sqlalchemy import update
 
 player_in_game_blueprint = Blueprint('player_in_game', __name__)
 
+# Game Status
+# 1 = Iniciando
+# 2 = Em progresso
+# 3 = Finalizado
+
 @player_in_game_blueprint.route('/post_player_in_game', methods=['POST'])
 def post_game_participate():
     try:    
-        game_participate_json = request.get_json()
-        
+        game_participate_json = request.get_json()    
         player_id = game_participate_json['player_id']
     
-        game = Game.query.filter_by(status = 1).first()
+        game_starting = Game.query.filter_by(status = 1).first()  
         
-        if game is None:
+        # Caso não haja um jogo no estado Iniciando
+        if game_starting is None:
+
             game_in_progress = Game.query.filter_by(status = 2).first() 
-            print(game_in_progress, file = sys.stderr)
-        
+
+            # Caso não haja um jogo nem iniciando e nem em progresso, inicia-se um
             if game_in_progress is None:
-                game = Game()
-                db.session.add(game)
-                db.session.commit()
+                new_game = Game()
+                db.session.add(new_game)
+
+                db.session.flush()
+                db.session.refresh(new_game)                
                 
-            else:
-                return jsonify({"message": "Jogo em Progresso!"}), 406
-        
-        else:
-            db.session.update(PlayerInGame(game_id=game.id, player_id=player_id))   
+                db.session.add(PlayerInGame(game_id=new_game.id, player_id=player_id))
             
-        db.session.add(PlayerInGame(game_id=game.id, player_id=player_id))
+            # Caso haja um jogo em progresso
+            else:
+                return jsonify({"message": "Game in Progress"}), 406
         
+        # Caso haja um jogo no estado Iniciando
+        else:
+            db.session.add(PlayerInGame(game_id=game_starting.id, player_id=player_id))
+             
         db.session.commit()
 
-    except HTTPError:
-        return jsonify({"message": "NOT FOUND"}), 404
+    except:
+        return jsonify({"message": "Error on adding player to game"}), 500
     else:
-        return jsonify({"message": "Player in game Recived"}), 200
+        return jsonify({"message": "Player added to game"}), 200
+
+
+
+
+@player_in_game_blueprint.route('/get_players_in_game', methods=['GET'])
+def get_game_participate():
+    try:
+        game_starting = Game.query.filter_by(status = 1).first()
+        game_in_progress = Game.query.filter_by(status = 2).first()
+
+        game = game_starting if game_starting else (game_in_progress if game_in_progress else None)
+        
+        if game is None:
+            return jsonify({"message": "No game found"}), 406
+        
+        response = {
+            "game_id": game.id,
+            "game_status": game.status,
+            "players": []
+        }
+
+        players_in_game = PlayerInGame.query.filter_by(game_id=game.id).all()
+
+        for player_in_game in players_in_game:
+            response['players'].append({
+                "player_id": player_in_game.player_id
+            })
+
+        return json.dumps(response), 200        
+
+    except:
+        return jsonify({"message": "Error retriving players"}), 500
