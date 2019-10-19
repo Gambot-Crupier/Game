@@ -91,17 +91,17 @@ def delete_game_participate():
     try:
         player_id = request.args.get('player_id')
         game_id = request.args.get('game_id')
-        print(player_id, file=sys.stderr)
+        
         player_in_game = PlayerInGame.query.filter_by(player_id=player_id, game_id=game_id).first()
-        print(player_in_game, file=sys.stderr)
+
         if not player_in_game:
-            print("LALALALALALALALALALALLALALALLA")
+
             return jsonify({"message": "Player do not exists."})
         else:
-            print("HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", file=sys.stderr)
+            
             db.session.delete(player_in_game)
             return jsonify({"message": "Player deleted."})
-            print("OOOIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIOOOOOOOOOOOOOOO", file = sys.stderr)
+        
 
         db.session.commit()
         
