@@ -81,4 +81,4 @@ def get_game_participate():
         return json.dumps(response), 200        
 
     except:
-        return jsonify({"message": "Error retriving players"}), 500
+        return jsonify({"message": "Error retriving players in game"}), 500
