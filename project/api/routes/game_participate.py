@@ -85,10 +85,13 @@ def get_game_participate():
 
 
 
-@player_in_game_blueprint.route('/start_game', methods=['PATCH'])
+@player_in_game_blueprint.route('/start_game', methods=['POST'])
 def start_game():
     try:
         game_starting = Game.query.filter_by(status = 1).first()
+        if game_starting is None:
+            return jsonify({"message": "No game is initializing"}), 406
+
         players = PlayerInGame.query.filter_by(game_id=game_starting.id).all()
 
         for player in players:
@@ -97,7 +100,27 @@ def start_game():
         game_starting.status = 2 # Status do jogo mudado para "Em Progresso"
         db.session.commit()
 
-        return jsonify({"message": "Tentando startar o joguim"}), 200        
+        return jsonify({"message": "Game Started"}), 200
 
     except Exception as e:
-        return jsonify({"message": "Error on starting Game", "error": str(e)}), 500
+        return jsonify({"error": "Error on starting Game", "message": str(e)}), 500
+
+
+
+@player_in_game_blueprint.route('/get_players_money', methods=['GET'])
+def get_player_money():
+    try:
+        player_id = request.args.get('player_id')
+
+        game = Game.query.filter_by(status=2).first()
+        if game is None:
+            return jsonify({"error": "No game in progress"}), 406
+
+        player = PlayerInGame.query.filter_by(player_id=player_id, game_id=game.id).first()
+        if player is not None:
+            return jsonify({"player_id": player.player_id, "game_id": game.id, "money": player.money}), 200
+        else:
+            return jsonify({"error": "No player with this id found in current game"}), 406
+
+    except Exception as e:
+        return jsonify({"message": "Error on getting Player's Money", "error": str(e)}), 500
