@@ -20,15 +20,17 @@ class Game(db.Model):
 class PlayerInGame(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), primary_key=True)
     player_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    
+    money = db.Column(db.Integer)
+
     def __init__(self, game_id, player_id):
         self.game_id = game_id
         self.player_id = player_id
 
+
 class Round(db.Model):
     bet_prize = db.Column(db.Float, nullable = False)
-    winner = db.Column(db.Int, nullable = True)
+    winner = db.Column(db.Integer, nullable = True)
     small_blind = db.Column(db.Float, nullable = False)
     big_blind = db.Column(db.Float, nullable = False)
-    id = db.Column(db.Int, nullable = False, autoincrement = True, primary_key = True, unique = True)
-    game_id = db.Column(db.Int, db.ForeignKey('game.id'))
+    id = db.Column(db.Integer, nullable = False, autoincrement = True, primary_key = True, unique = True)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'))

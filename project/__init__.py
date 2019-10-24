@@ -19,7 +19,7 @@ def create_app(script_info=None):
     db.init_app(app)
 
     # register blueprints
-    from project.api.game_participate import player_in_game_blueprint
+    from project.api.routes.game_participate import player_in_game_blueprint
     app.register_blueprint(player_in_game_blueprint)
 
     # shell context for flask cli

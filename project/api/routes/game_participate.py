@@ -82,3 +82,22 @@ def get_game_participate():
 
     except:
         return jsonify({"message": "Error retriving players in game"}), 500
+
+
+
+@player_in_game_blueprint.route('/start_game', methods=['PATCH'])
+def start_game():
+    try:
+        game_starting = Game.query.filter_by(status = 1).first()
+        players = PlayerInGame.query.filter_by(game_id=game_starting.id).all()
+
+        for player in players:
+            player.money = 10000 # Valor Inicial de dinheiro dos jogadores
+
+        game_starting.status = 2 # Status do jogo mudado para "Em Progresso"
+        db.session.commit()
+
+        return jsonify({"message": "Tentando startar o joguim"}), 200        
+
+    except Exception as e:
+        return jsonify({"message": "Error on starting Game", "error": str(e)}), 500
