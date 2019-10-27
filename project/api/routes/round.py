@@ -5,8 +5,10 @@ from project.api.models import Game, PlayerInGame, Round
 from project import db
 import json, sys
 from sqlalchemy import update
+import requests, os, json, sys
 
 round_blueprint = Blueprint('round', __name__)
+base_gateway_url = os.getenv('GAMBOT_GATEWAY_URL')
 
 @round_blueprint.route('/create_round', methods=['POST'])
 def create_round():
@@ -17,11 +19,23 @@ def create_round():
             db.session.add(round_data)
             db.session.commit()
 
-            # TODO: Colocar requisição do firebase aqui
+            # TODO: Pegar device_id dos jogadores para criar tópico
+            player_list = PlayerInGame.query.filter_by(game_id = game.id).all()
+            
+            request_url = base_gateway_url + 'device_id_list'
+            response = requests.request("POST", request_url, data = player_list
+                                        headers = {'Accept': 'application/json', 'content-type' : 'application/json'})
 
-            return jsonify({
+            if response.status_code is 200:
+                # TODO: Colocar requisição do firebase aqui
 
-            }), 200
+                return jsonify({
+                    "message": "Round Criado!"
+                }), 200
+            else:
+                return jsonify({
+                    "message": "Houve um erro ao criar o round, tente novamente!"
+                })
         else:
             return jsonify({
                 "message": "Não existe jogo ativo"
