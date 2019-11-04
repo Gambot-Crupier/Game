@@ -30,3 +30,25 @@ def create_round():
         return jsonify({
             "message": "Erro ao criar o round!"
         }), 400
+
+
+@round_blueprint.route('/get_player_money', methods=['GET'])
+def get_player_money():
+    try:
+        player_id = request.args.get('player_id')
+        game_id = request.args.get('game_id')
+        player_in_game = PlayerInGame.query.filter_by(player_id=player_id, game_id=game_id).first()
+
+        if player_in_game is not None:
+            return jsonify({
+                "player_id": player_id,
+                "game_id": game_id,
+                "money": player_in_game.money
+            }), 200
+        else:
+            return jsonify({ "message": "Player not found on this game." }), 404
+    except Exception as e:
+        return jsonify({ 
+            "error": "Error on trying to retrive player's money..",
+            "message": str(e)
+        }), 400
