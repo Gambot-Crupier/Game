@@ -35,6 +35,9 @@ def post_game_participate():
                 db.session.refresh(new_game)                
                 
                 db.session.add(PlayerInGame(game_id=new_game.id, player_id=player_id))
+                db.session.commit()
+
+                return jsonify({"message": "Player added to game", "game_id": new_game.id}), 200
             
             # Caso haja um jogo em progresso
             else:
@@ -46,10 +49,11 @@ def post_game_participate():
              
         db.session.commit()
 
+        return jsonify({"message": "Player added to game", "game_id": game_starting.id}), 200
+
     except:
         return jsonify({"message": "Error on adding player to game"}), 500
-    else:
-        return jsonify({"message": "Player added to game"}), 200
+        
 
 
 
@@ -81,7 +85,29 @@ def get_game_participate():
         return json.dumps(response), 200        
 
     except:
-        return jsonify({"message": "Error retriving players in game"}), 500
+        return jsonify({"message": "Error retriving players"}), 500
+    
+
+
+@player_in_game_blueprint.route('/delete_player_in_game', methods=['DELETE'])
+def delete_game_participate():
+    try:
+        player_id = request.args.get('player_id')
+        game_id = request.args.get('game_id')
+        
+        player_in_game = PlayerInGame.query.filter_by(player_id=player_id, game_id=game_id).first()
+
+        if not player_in_game:
+
+            return jsonify({"message": "Player is not in game."}), 406
+        else:
+            db.session.delete(player_in_game)
+        
+        db.session.commit()
+        return jsonify({"message": "Player removed from game."}), 200
+        
+    except:
+        return jsonify({"message": "Unable to remove player from game."}), 500
 
 
 
