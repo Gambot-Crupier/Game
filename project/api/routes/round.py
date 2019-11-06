@@ -17,16 +17,20 @@ def create_round():
         if game is not None:
             round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet_prize = 5000)
             db.session.add(round_data)
-            db.session.commit()
 
             # TODO: Pegar device_id dos jogadores para criar tópico
             player_list = PlayerInGame.query.filter_by(game_id = game.id).all()
-            
             request_url = base_gateway_url + 'device_id_list'
-            response = requests.request("POST", request_url, data = player_list
+            print('raaaa')
+            response = requests.request("POST", request_url, data = player_list,
                                         headers = {'Accept': 'application/json', 'content-type' : 'application/json'})
-
+            print('oi')
+            print(response)
             if response.status_code is 200:
+                db.session.commit()
+                # Zerar o valor da aposta do jogador e botar o atributo is_playing em 1
+
+
                 # TODO: Colocar requisição do firebase aqui
 
                 return jsonify({
@@ -35,7 +39,7 @@ def create_round():
             else:
                 return jsonify({
                     "message": "Houve um erro ao criar o round, tente novamente!"
-                })
+                }), 405
         else:
             return jsonify({
                 "message": "Não existe jogo ativo"
