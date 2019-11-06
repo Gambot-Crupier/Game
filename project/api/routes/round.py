@@ -8,6 +8,10 @@ from sqlalchemy import update
 
 round_blueprint = Blueprint('round', __name__)
 
+
+
+# QUANDO O ROUND ACABAR: ZERAR PLAYER_IN_GAME.BET E PLAYER_IN_GAME.IS_PLAYING = TRUE
+
 @round_blueprint.route('/create_round', methods=['POST'])
 def create_round():
     try:
@@ -50,5 +54,72 @@ def get_player_money():
     except Exception as e:
         return jsonify({ 
             "error": "Error on trying to retrive player's money..",
+            "message": str(e)
+        }), 400
+
+
+
+@round_blueprint.route('/get_round_bet', methods=['GET'])
+def get_round_bet():
+    try:
+        round_id = request.args.get('round_id')
+        round = Round.query.filter_by(id=round_id).first()
+
+        if round is not None:
+            return jsonify({
+                "round_id": round.id,
+                "bet": round.bet_prize
+            }), 200
+        else:
+            return jsonify({ "message": "Round not found." }), 404
+
+    except Exception as e:
+        return jsonify({ 
+            "error": "Error on trying to retrive round's bet..",
+            "message": str(e)
+        }), 400
+
+
+@round_blueprint.route('/get_player_bet', methods=['GET'])
+def get_player_bet():
+    try:
+        game_id = request.args.get('game_id')
+        player_id = request.args.get('player_id')
+        player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
+
+        if player_in_game is not None:
+            return jsonify({
+                "game_id": player_in_game.game_id,
+                "player_id": player_in_game.player_id,
+                "bet": player_in_game.bet
+            }), 200
+        else:
+            return jsonify({ "message": "Jogador não está no jogo!." }), 404
+
+    except Exception as e:
+        return jsonify({ 
+            "error": "Erro ao tentar recuprar as apostas do jogador",
+            "message": str(e)
+        }), 400
+
+
+
+@round_blueprint.route('/leave_match', methods=['POST'])
+def leave_match():
+    try:
+        game_id = request.args.get('game_id')
+        player_id = request.args.get('player_id')
+        player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
+
+        if player_in_game is not None:
+            player_in_game.is_playing_match=False
+            db.session.commit()
+            return jsonify({"message":"Jogador fugiu da partida!"}), 200
+        else:
+            return jsonify({ "message": "Jogador não está no jogo!" }), 400
+
+    except Exception as e:
+        return jsonify({ 
+            "error": "Erro ao tentar tirar jogador da partida!",
             "message": str(e)
         }), 400

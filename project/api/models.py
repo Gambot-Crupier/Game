@@ -15,12 +15,14 @@ class Game(db.Model):
     
     def __init__(self):
         self.status  = 1
-    
-        
+
+
 class PlayerInGame(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), primary_key=True)
     player_id = db.Column(db.Integer, nullable=False, primary_key=True)
     money = db.Column(db.Integer)
+    bet = db.Column(db.Integer)
+    is_playing_match = db.Column(db.Boolean, default=True)
 
     def __init__(self, game_id, player_id):
         self.game_id = game_id
