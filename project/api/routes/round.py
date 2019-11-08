@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from os.path import join, dirname, realpath
 from requests.exceptions import HTTPError
 from project.api.models import Game, PlayerInGame, Round
+from project.api.modules.firebase import create_topic, message_app
 from project import db
 import json, sys
 from sqlalchemy import update
@@ -21,25 +22,18 @@ def create_round():
             # TODO: Pegar device_id dos jogadores para criar tópico
             player_list = PlayerInGame.query.filter_by(game_id = game.id).all()
             request_url = base_gateway_url + 'device_id_list'
-            print('raaaa')
-            response = requests.request("POST", request_url, data = player_list,
-                                        headers = {'Accept': 'application/json', 'content-type' : 'application/json'})
-            print('oi')
-            print(response)
-            if response.status_code is 200:
-                db.session.commit()
-                # Zerar o valor da aposta do jogador e botar o atributo is_playing em 1
+
+            db.session.commit()
+            # Zerar o valor da aposta do jogador e botar o atributo is_playing em 1
 
 
-                # TODO: Colocar requisição do firebase aqui
+            # TODO: Colocar requisição do firebase aqui
+            create_topic(player_list, game.id)
+            message_app('Comece o jogo', game.id)
 
-                return jsonify({
-                    "message": "Round Criado!"
-                }), 200
-            else:
-                return jsonify({
-                    "message": "Houve um erro ao criar o round, tente novamente!"
-                }), 405
+            return jsonify({
+                "message": "Round Criado!"
+            }), 200
         else:
             return jsonify({
                 "message": "Não existe jogo ativo"

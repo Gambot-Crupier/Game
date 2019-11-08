@@ -20,6 +20,7 @@ class Game(db.Model):
 class PlayerInGame(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), primary_key=True)
     player_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    device_id = db.Column(db.Integer, nullable=False)
     money = db.Column(db.Integer)
 
     def __init__(self, game_id, player_id):

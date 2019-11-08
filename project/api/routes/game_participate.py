@@ -18,6 +18,7 @@ def post_game_participate():
     try:    
         game_participate_json = request.get_json()    
         player_id = game_participate_json['player_id']
+        device_id = game_participate_json['device_id']
     
         game_starting = Game.query.filter_by(status = 1).first()  
         
@@ -34,7 +35,7 @@ def post_game_participate():
                 db.session.flush()
                 db.session.refresh(new_game)                
                 
-                db.session.add(PlayerInGame(game_id=new_game.id, player_id=player_id))
+                db.session.add(PlayerInGame(game_id=new_game.id, player_id=player_id,device_id=device_id))
                 db.session.commit()
 
                 return jsonify({"message": "Player added to game", "game_id": new_game.id}), 200
