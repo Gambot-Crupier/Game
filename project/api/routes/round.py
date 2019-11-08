@@ -18,12 +18,11 @@ def create_round():
         if game is not None:
             round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet_prize = 5000)
             db.session.add(round_data)
+            db.session.commit()
 
             # TODO: Pegar device_id dos jogadores para criar tópico
-            player_list = PlayerInGame.query.filter_by(game_id = game.id).all()
-            request_url = base_gateway_url + 'device_id_list'
+            player_list = PlayerInGame.query(device_id).filter_by(game_id = game.id).all()
 
-            db.session.commit()
             # Zerar o valor da aposta do jogador e botar o atributo is_playing em 1
 
 

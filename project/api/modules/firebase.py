@@ -9,7 +9,7 @@ def create_topic(players_list, game_id):
 
 def message_app(self, data, game_id):
     topic = 'Partida' + game_id
-    message = messaging.Message(topic = game_id, data = data)
+    message = messaging.Message(topic = topic, data = data)
     response = messaging.send(message)
 
     return response
