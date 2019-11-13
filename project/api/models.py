@@ -36,3 +36,4 @@ class Round(db.Model):
     big_blind = db.Column(db.Float, nullable = False)
     id = db.Column(db.Integer, nullable = False, autoincrement = True, primary_key = True, unique = True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
+    last_player_raised_bet = db.Column(db.Integer)

@@ -8,8 +8,6 @@ from sqlalchemy import update
 
 round_blueprint = Blueprint('round', __name__)
 
-
-
 # QUANDO O ROUND ACABAR: ZERAR PLAYER_IN_GAME.BET E PLAYER_IN_GAME.IS_PLAYING = TRUE
 
 @round_blueprint.route('/create_round', methods=['POST'])
@@ -121,5 +119,63 @@ def leave_match():
     except Exception as e:
         return jsonify({ 
             "error": "Erro ao tentar tirar jogador da partida!",
+            "message": str(e)
+        }), 400
+
+
+
+@round_blueprint.route('/raise_bet', methods=['POST'])
+def raise_bet():
+    try:
+        game_id = request.args.get('game_id')
+        player_id = request.args.get('player_id')
+        round_id = request.args.get('round_id')
+        new_bet = int(request.args.get('value'))
+
+        player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
+        current_round = Round.query.filter_by(id=round_id).first()
+
+        if player_in_game is not None:
+            if new_bet > player_in_game.bet:
+                player_in_game.bet=new_bet
+                current_round.last_player_raised_bet=player_id
+                current_round.bet_prize=new_bet
+                db.session.commit()
+                return jsonify({"message":"Aposta Aumentada!"}), 200
+            else:
+                return jsonify({"message":"Valor passado é menor ou igual ao valor da sua aposta."}), 400
+
+        else:
+            return jsonify({ "message": "Jogador não está no jogo!" }), 400
+
+    except Exception as e:
+        return jsonify({ 
+            "error": "Erro ao tentar aumentar a aposta!",
+            "message": str(e)
+        }), 400
+
+
+
+@round_blueprint.route('/pay_bet', methods=['POST'])
+def pay_bet():
+    try:
+        game_id = request.args.get('game_id')
+        player_id = request.args.get('player_id')
+        round_id = request.args.get('round_id')
+
+        player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
+        current_round = Round.query.filter_by(id=round_id).first()
+
+        if player_in_game is not None:
+            player_in_game.bet=current_round.bet_prize
+            db.session.commit()
+            return jsonify({"message":"Aposta paga!"}), 200
+
+        else:
+            return jsonify({ "message": "Jogador não está no jogo!" }), 400
+
+    except Exception as e:
+        return jsonify({ 
+            "error": "Erro ao tentar pagar a aposta!",
             "message": str(e)
         }), 400
