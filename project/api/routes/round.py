@@ -9,13 +9,14 @@ from sqlalchemy import update
 round_blueprint = Blueprint('round', __name__)
 
 # QUANDO O ROUND ACABAR: ZERAR PLAYER_IN_GAME.BET E PLAYER_IN_GAME.IS_PLAYING = TRUE
+# QUADNO INICIAR O ROUND, DEVE SER COLOCADO O PRIMEIRO PLAYER A JOGAR COMO 'LAST_PLAYER_RAISED_BET'
 
 @round_blueprint.route('/create_round', methods=['POST'])
 def create_round():
     try:
         game = Game.query.filter_by(status = 2).first()
         if game is not None:
-            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet_prize = 5000)
+            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet = 5000)
             db.session.add(round_data)
             db.session.commit()
 
@@ -66,7 +67,7 @@ def get_round_bet():
         if round is not None:
             return jsonify({
                 "round_id": round.id,
-                "bet": round.bet_prize
+                "bet": round.bet
             }), 200
         else:
             return jsonify({ "message": "Round not found." }), 404
@@ -133,15 +134,25 @@ def raise_bet():
         new_bet = int(request.args.get('value'))
 
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
-        current_round = Round.query.filter_by(id=round_id).first()
+        current_round = Round.query.filter_by(id=round_id).first() 
 
         if player_in_game is not None:
             if new_bet > player_in_game.bet:
-                player_in_game.bet=new_bet
-                current_round.last_player_raised_bet=player_id
-                current_round.bet_prize=new_bet
-                db.session.commit()
-                return jsonify({"message":"Aposta Aumentada!"}), 200
+                money_difference = new_bet - player_in_game.bet
+
+                if player_in_game.money > money_difference:
+                    player_in_game.bet=new_bet
+                    player_in_game.money-=money_difference
+
+                    current_round.last_player_raised_bet=player_id
+                    current_round.bet=new_bet
+                    current_round.total_bet_prize+=money_difference
+                    
+                    db.session.commit()
+                    return jsonify({"message":"Aposta Aumentada!"}), 200
+                else:
+                    return jsonify({"message":"Você não possui dinheiro para aumentar tanto a aposta. Tente pagá-la."}), 500
+
             else:
                 return jsonify({"message":"Valor passado é menor ou igual ao valor da sua aposta."}), 400
 
@@ -163,13 +174,28 @@ def pay_bet():
         player_id = request.args.get('player_id')
         round_id = request.args.get('round_id')
 
+
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
         current_round = Round.query.filter_by(id=round_id).first()
 
         if player_in_game is not None:
-            player_in_game.bet=current_round.bet_prize
-            db.session.commit()
-            return jsonify({"message":"Aposta paga!"}), 200
+            money_difference = current_round.bet - player_in_game.bet
+
+            # Caso seja All In
+            if player_in_game.money < money_difference:
+                current_round.total_bet_prize+=player_in_game.money
+                player_in_game.bet+=player_in_game.money
+                player_in_game.money=0
+
+                db.session.commit()
+                return jsonify({"message":"All In!"}), 200
+            else:
+                current_round.total_bet_prize+=money_difference
+                player_in_game.money-=money_difference
+                player_in_game.bet=current_round.bet
+
+                db.session.commit()
+                return jsonify({"message":"Aposta paga!"}), 200
 
         else:
             return jsonify({ "message": "Jogador não está no jogo!" }), 400
