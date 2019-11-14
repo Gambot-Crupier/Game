@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from os.path import join, dirname, realpath
 from requests.exceptions import HTTPError
 from project.api.models import Game, PlayerInGame, Round
-from project.api.modules.firebase import create_topic, message_app
+from project.api.modules.firebase import subscribe_to_firebase, message_app
 from project import db
 import json, sys
 from sqlalchemy import update
@@ -27,7 +27,6 @@ def create_round():
 
 
             # TODO: Colocar requisição do firebase aqui
-            create_topic(player_list, game.id)
             message_app('Comece o jogo', game.id)
 
             return jsonify({

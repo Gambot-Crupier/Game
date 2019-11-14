@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from os.path import join, dirname, realpath
 from requests.exceptions import HTTPError
 from project.api.models import Game, PlayerInGame
+from project.api.modules.firebase import subscribe_to_firebase, message_app
 from project import db
 import json, sys
 from sqlalchemy import update
@@ -19,7 +20,8 @@ def post_game_participate():
         game_participate_json = request.get_json()    
         player_id = game_participate_json['player_id']
         device_id = game_participate_json['device_id']
-    
+
+
         game_starting = Game.query.filter_by(status = 1).first()  
         
         # Caso não haja um jogo no estado Iniciando
@@ -32,11 +34,20 @@ def post_game_participate():
                 new_game = Game()
                 db.session.add(new_game)
 
+
                 db.session.flush()
                 db.session.refresh(new_game)                
                 
                 db.session.add(PlayerInGame(game_id=new_game.id, player_id=player_id,device_id=device_id))
+
                 db.session.commit()
+                
+                try:
+                    subscribe_to_firebase(device_id, str(new_game.id))
+
+                except Exception as e:
+                    print(e)
+                    return jsonify({'erro': 'firebase'}), 400
 
                 return jsonify({"message": "Player added to game", "game_id": new_game.id}), 200
             
@@ -46,8 +57,13 @@ def post_game_participate():
         
         # Caso haja um jogo no estado Iniciando
         else:
-            db.session.add(PlayerInGame(game_id=game_starting.id, player_id=player_id))
-             
+            db.session.add(PlayerInGame(game_id=game_starting.id, device_id=device_id, player_id=player_id))
+            try:
+                subscribe_to_firebase(device_id, str(game_starting.id))
+            except Exception as e:
+                print(e)
+                return jsonify({'erro': 'firebase'}), 400
+
         db.session.commit()
 
         return jsonify({"message": "Player added to game", "game_id": game_starting.id}), 200
@@ -96,7 +112,7 @@ def delete_game_participate():
         player_id = request.args.get('player_id')
         game_id = request.args.get('game_id')
         
-        player_in_game = PlayerInGame.query.filter_by(player_id=player_id, game_id=game_id).first()
+        player_in_game = PlayerInGame.query().filter_by(player_id=player_id, game_id=game_id).first()
 
         if not player_in_game:
 
