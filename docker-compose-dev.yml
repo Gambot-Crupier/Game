@@ -14,10 +14,14 @@ services:
       - FLASK_APP=project/__init__.py
       - FLASK_ENV=development
       - APP_SETTINGS=project.config.DevelopmentConfig
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/games_dev
-      - DATABASE_TEST_URL=postgres://postgres:postgres@db:5432/games_test
+      - DATABASE_URL=postgres://postgres:postgres@gambot_game_db:5432/games_dev
+      - DATABASE_TEST_URL=postgres://postgres:postgres@gambot_game_db:5432/games_test
+      - GOOGLE_APPLICATION_CREDENTIALS=/src/service-account.json
+      - GAMBOT_GATEWAY_URL=http://gambot_gateway:5000/
     depends_on:
       - db
+    networks: 
+      - gambotnetwork
     
   db:
     container_name: gambot_game_db
@@ -25,7 +29,14 @@ services:
       context: ./project/db
       dockerfile: Dockerfile
     ports:
-      - 5435:5432
+      - 5433:5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    networks: 
+      - gambotnetwork
+
+networks:
+  gambotnetwork:
+    external: true
+    driver: "bridge"
