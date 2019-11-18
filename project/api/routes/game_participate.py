@@ -46,7 +46,6 @@ def post_game_participate():
                     subscribe_to_firebase(device_id, str(new_game.id))
 
                 except Exception as e:
-                    print(e)
                     return jsonify({'erro': 'firebase'}), 400
 
                 return jsonify({"message": "Player added to game", "game_id": new_game.id}), 200

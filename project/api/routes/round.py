@@ -27,7 +27,7 @@ def create_round():
 
 
             # TODO: Colocar requisição do firebase aqui
-            message_app('Comece o jogo', game.id)
+            message_app('redirect', game.id)
 
             return jsonify({
                 "message": "Round Criado!"
