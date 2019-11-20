@@ -4,3 +4,4 @@ psycopg2==2.7.4
 requests==2.21.0
 requests==2.21.0
 firebase-admin==3.0.0
+gunicorn
