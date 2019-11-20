@@ -2,11 +2,14 @@ from flask import Blueprint, jsonify, request
 from os.path import join, dirname, realpath
 from requests.exceptions import HTTPError
 from project.api.models import Game, PlayerInGame, Round
+from project.api.modules.firebase import subscribe_to_firebase, message_app
 from project import db
 import json, sys
 from sqlalchemy import update
+import requests, os, json, sys
 
 round_blueprint = Blueprint('round', __name__)
+base_gateway_url = os.getenv('GAMBOT_GATEWAY_URL')
 
 # QUANDO O ROUND ACABAR: ZERAR PLAYER_IN_GAME.BET E PLAYER_IN_GAME.IS_PLAYING = TRUE
 # QUADNO INICIAR O ROUND, DEVE SER COLOCADO O PRIMEIRO PLAYER A JOGAR COMO 'LAST_PLAYER_RAISED_BET'
@@ -20,10 +23,17 @@ def create_round():
             db.session.add(round_data)
             db.session.commit()
 
+            # TODO: Pegar device_id dos jogadores para criar tópico
+            player_list = PlayerInGame.query(device_id).filter_by(game_id = game.id).all()
+
+            # Zerar o valor da aposta do jogador e botar o atributo is_playing em 1
+
+
             # TODO: Colocar requisição do firebase aqui
+            message_app('redirect', game.id)
 
             return jsonify({
-
+                "message": "Round Criado!"
             }), 200
         else:
             return jsonify({

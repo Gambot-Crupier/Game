@@ -20,13 +20,15 @@ class Game(db.Model):
 class PlayerInGame(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), primary_key=True)
     player_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    device_id = db.Column(db.String(255), nullable=False)
     money = db.Column(db.Integer)
     bet = db.Column(db.Float, default=0)
     is_playing_match = db.Column(db.Boolean, default=True)
 
-    def __init__(self, game_id, player_id):
+    def __init__(self, game_id, player_id, device_id):
         self.game_id = game_id
         self.player_id = player_id
+        self.device_id = device_id
 
 
 class Round(db.Model):
