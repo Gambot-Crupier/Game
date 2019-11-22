@@ -215,3 +215,22 @@ def pay_bet():
             "error": "Erro ao tentar pagar a aposta!",
             "message": str(e)
         }), 400
+
+
+
+@round_blueprint.route('/distribuite_cards', methods=['GET'])
+def distribuite_cards():
+    try:
+        game = Game.query.filter_by(status = 2).first()
+        if game is not None:
+            round_data = Round.query.all()
+            return jsonify({'distribute_cards': str(round_data[-1].distribute_cards)}), 200
+
+        else:
+            return jsonify({
+                "message": "Não existe jogo ativo."
+            }), 500
+    except:
+        return jsonify({
+            "message": "Erro ao tentar recuperar se as cartas devem ser distribuídas!"
+        }), 500
