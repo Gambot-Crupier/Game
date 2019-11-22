@@ -9,7 +9,7 @@ def subscribe_to_firebase(players_list, game_id):
 
     return response
 
-def message_app(self, data, game_id):
+def message_app(data, game_id):
     players_list = PlayerInGame.query.filter_by(game_id = game_id).all()
     
     for player in players_list:

@@ -41,12 +41,18 @@ def post_game_participate():
                 db.session.add(PlayerInGame(game_id=new_game.id, player_id=player_id,device_id=device_id))
 
                 db.session.commit()
-                
-                try:
-                    subscribe_to_firebase(device_id, str(new_game.id))
 
+                data = {
+                    'message': 'Atualiza'
+                }
+
+                try:
+                    message_app(data, new_game.id)
                 except Exception as e:
-                    return jsonify({'erro': 'firebase'}), 400
+                    print(str(e))
+                    return jsonify({
+                        'message': str(e)
+                    }), 400
 
                 return jsonify({"message": "Player added to game", "game_id": new_game.id}), 200
             
@@ -57,13 +63,22 @@ def post_game_participate():
         # Caso haja um jogo no estado Iniciando
         else:
             db.session.add(PlayerInGame(game_id=game_starting.id, device_id=device_id, player_id=player_id))
-            try:
-                subscribe_to_firebase(device_id, str(game_starting.id))
-            except Exception as e:
-                print(e)
-                return jsonify({'erro': 'firebase'}), 400
+            db.session.commit()
 
-        db.session.commit()
+            data = {
+                'message': 'Atualiza'
+            }
+
+            try:
+                message_app(data, game_starting.id)
+            except Exception as e:
+                print(str(e))
+                
+                return jsonify({
+                    'message': str(e)
+                }), 400
+        
+        
 
         return jsonify({"message": "Player added to game", "game_id": game_starting.id}), 200
 
