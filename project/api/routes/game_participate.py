@@ -95,7 +95,8 @@ def get_game_participate():
 
         for player_in_game in players_in_game:
             response['players'].append({
-                "player_id": player_in_game.player_id
+                "player_id": player_in_game.player_id,
+                "device_id": player_in_game.device_id
             })
 
         return json.dumps(response), 200        

@@ -123,6 +123,7 @@ def leave_match():
         if player_in_game is not None:
             player_in_game.is_playing_match=False
             db.session.commit()
+            message_app(player_id, game.id)
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
         else:
             return jsonify({ "message": "Jogador não está no jogo!" }), 400
