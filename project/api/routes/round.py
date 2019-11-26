@@ -23,14 +23,23 @@ def create_round():
             db.session.add(round_data)
             db.session.commit()
 
-            # TODO: Pegar device_id dos jogadores para criar tópico
-            player_list = PlayerInGame.query(device_id).filter_by(game_id = game.id).all()
-
             # Zerar o valor da aposta do jogador e botar o atributo is_playing em 1
 
 
             # TODO: Colocar requisição do firebase aqui
-            message_app('redirect', game.id)
+            data = {
+                'message': 'Redireciona'
+            }
+
+            try:
+                message_app(data, game.id)
+            except Exception as e:
+                print(str(e))
+
+
+                return jsonify({
+                    'message': str(e)
+                }), 400
 
             return jsonify({
                 "message": "Round Criado!"
@@ -38,7 +47,7 @@ def create_round():
         else:
             return jsonify({
                 "message": "Não existe jogo ativo"
-            })
+            }), 400
     except:
         return jsonify({
             "message": "Erro ao criar o round!"
@@ -123,6 +132,7 @@ def leave_match():
         if player_in_game is not None:
             player_in_game.is_playing_match=False
             db.session.commit()
+            message_app(player_id, game.id)
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
         else:
             return jsonify({ "message": "Jogador não está no jogo!" }), 400
