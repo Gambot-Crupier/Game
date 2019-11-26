@@ -11,6 +11,14 @@ import requests, os, json, sys
 round_blueprint = Blueprint('round', __name__)
 base_gateway_url = os.getenv('GAMBOT_GATEWAY_URL')
 
+@round_blueprint.route('/get_round_id', methods=['GET'])
+def get_id():
+    round_data = Round.query.filter_by().order_by(ObjectRes.id.desc()).first()
+
+    return jsonify({
+        'round_id': round_data.id
+    }), 200
+
 # QUANDO O ROUND ACABAR: ZERAR PLAYER_IN_GAME.BET E PLAYER_IN_GAME.IS_PLAYING = TRUE
 # QUADNO INICIAR O ROUND, DEVE SER COLOCADO O PRIMEIRO PLAYER A JOGAR COMO 'LAST_PLAYER_RAISED_BET'
 
