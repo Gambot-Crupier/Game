@@ -40,3 +40,4 @@ class Round(db.Model):
     id = db.Column(db.Integer, nullable = False, autoincrement = True, primary_key = True, unique = True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
     last_player_raised_bet = db.Column(db.Integer)
+    distribute_cards = db.Column(db.Boolean, default=True)
