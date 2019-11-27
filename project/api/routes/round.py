@@ -38,11 +38,11 @@ def create_round():
         else:
             return jsonify({
                 "message": "Não existe jogo ativo"
-            })
+            }), 500
     except:
         return jsonify({
             "message": "Erro ao criar o round!"
-        }), 400
+        }), 500
 
 
 @round_blueprint.route('/get_player_money', methods=['GET'])
@@ -234,3 +234,28 @@ def distribuite_cards():
         return jsonify({
             "message": "Erro ao tentar recuperar se as cartas devem ser distribuídas!"
         }), 500
+
+
+
+@round_blueprint.route('/get_round', methods=['GET'])
+def get_round():
+    try:
+        game = Game.query.filter_by(status = 2).first()
+
+        if game is not None:
+            round_data = Round.query.all()
+            current_round = round_data[-1]
+            return jsonify(
+                {
+                    'id': current_round.id,
+                    'game_id': current_round.game_id,
+                    'last_player_raised_bet': current_round.last_player_raised_bet,
+                    'distribute_cards': str(current_round.distribute_cards),
+                    'winner': current_round.winner,
+                }
+            ), 200
+
+        else:
+            return jsonify({ "message": "Não existe jogo ativo." }), 500
+    except:
+        return jsonify({ "message": "Erro ao tentar recuperar round!" }), 500
