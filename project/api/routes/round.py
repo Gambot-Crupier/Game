@@ -42,9 +42,6 @@ def create_round():
             try:
                 message_app(data, game.id)
             except Exception as e:
-                print(str(e))
-
-
                 return jsonify({
                     'message': str(e)
                 }), 400
@@ -140,7 +137,18 @@ def leave_match():
         if player_in_game is not None:
             player_in_game.is_playing_match=False
             db.session.commit()
-            message_app(player_id, game.id)
+            
+            data = {
+                'message': 'Novo turno'
+            }
+
+            try:
+                message_app(data, game_id)
+            except Exception as e:
+                return jsonify({
+                    'message': str(e)
+                }), 400
+
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
         else:
             return jsonify({ "message": "Jogador não está no jogo!" }), 400
@@ -177,6 +185,18 @@ def raise_bet():
                     current_round.total_bet_prize+=money_difference
                     
                     db.session.commit()
+
+                    data = {
+                        'message': 'Novo turno'
+                    }
+
+                    try:
+                        message_app(data, game_id)
+                    except Exception as e:
+                        return jsonify({
+                            'message': str(e)
+                        }), 400
+
                     return jsonify({"message":"Aposta Aumentada!"}), 200
                 else:
                     return jsonify({"message":"Você não possui dinheiro para aumentar tanto a aposta. Tente pagá-la."}), 500
@@ -216,6 +236,17 @@ def pay_bet():
                 player_in_game.money=0
 
                 db.session.commit()
+                data = {
+                        'message': 'Novo turno'
+                    }
+
+                try:
+                    message_app(data, game_id)
+                except Exception as e:
+                    return jsonify({
+                        'message': str(e)
+                    }), 400
+                    
                 return jsonify({"message":"All In!"}), 200
             else:
                 current_round.total_bet_prize+=money_difference
