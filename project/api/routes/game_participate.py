@@ -22,8 +22,13 @@ def post_game_participate():
         device_id = game_participate_json['device_id']
 
 
-        game_starting = Game.query.filter_by(status = 1).first()  
-        
+        try:
+            game_starting = Game.query.filter_by(status = 1).first()  
+        except Exception as e:
+            print(str(e))
+
+
+
         # Caso não haja um jogo no estado Iniciando
         if game_starting is None:
 

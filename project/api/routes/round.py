@@ -13,14 +13,34 @@ base_gateway_url = os.getenv('GAMBOT_GATEWAY_URL')
 
 @round_blueprint.route('/get_round_id', methods=['GET'])
 def get_id():
-    round_data = Round.query.filter_by().order_by(ObjectRes.id.desc()).first()
+    round_data = Round.query.filter_by().all()
 
     return jsonify({
-        'round_id': round_data.id
+        'round_id': round_data[-1].id
     }), 200
 
 # QUANDO O ROUND ACABAR: ZERAR PLAYER_IN_GAME.BET E PLAYER_IN_GAME.IS_PLAYING = TRUE
 # QUADNO INICIAR O ROUND, DEVE SER COLOCADO O PRIMEIRO PLAYER A JOGAR COMO 'LAST_PLAYER_RAISED_BET'
+
+@round_blueprint.route('/round_redirect', methods=['POST'])
+def redirect_round():
+    game = Game.query.filter_by(status = 2).first()
+
+    data = {
+        'message': 'Redireciona'
+    }
+
+    try:
+        message_app(data, game.id)
+    except Exception as e:
+        return jsonify({
+            'message': str(e)
+        }), 400
+    
+    return jsonify({
+        'message': 'Redirecionou'
+    }), 200
+
 
 @round_blueprint.route('/create_round', methods=['POST'])
 def create_round():
@@ -34,19 +54,6 @@ def create_round():
             db.session.commit()
 
             # Zerar o valor da aposta do jogador e botar o atributo is_playing em 1
-
-
-            # TODO: Colocar requisição do firebase aqui
-            data = {
-                'message': 'Redireciona'
-            }
-
-            try:
-                message_app(data, game.id)
-            except Exception as e:
-                return jsonify({
-                    'message': str(e)
-                }), 400
 
             return jsonify({
                 "message": "Round Criado!"
@@ -88,12 +95,14 @@ def get_player_money():
 def get_round_bet():
     try:
         round_id = request.args.get('round_id')
-        round = Round.query.filter_by(id=round_id).first()
+        round_data = Round.query.filter_by(id=round_id).first()
+        print(round_data)
 
-        if round is not None:
+
+        if round_data is not None:
             return jsonify({
-                "round_id": round.id,
-                "bet": round.bet
+                "round_id": round_data.id,
+                "bet": round_data.bet
             }), 200
         else:
             return jsonify({ "message": "Round not found." }), 404
@@ -318,18 +327,37 @@ def get_round():
     except:
         return jsonify({ "message": "Erro ao tentar recuperar round!" }), 500
 
+@round_blueprint.route('/get_current_player', methods=['GET'])
+def get_current_player():
+    round_id = request.args.get('round_id')
 
+    if round_id is not None:
+        round_data = Round.query.filter_by(id = round_id).first()
 
+        if round_data is not None:
+            return jsonify({
+                'current_player_id': round_data.current_player_id
+            }), 200
+        else:
+            return jsonify({
+                'message': 'Could not find round'
+            }), 400
+    else:
+        return jsonify({
+            'message': 'Invalid Arguments'
+        }), 400
 
 @round_blueprint.route('/post_player_position', methods=['POST'])
 def post_player_position():
     try:
-        player_id = request.args.get('player_id')
-        game = Game.query.filter_by(status = 2).first()
+        data = request.json
+        player_id = data['player_id']
+        
+        game = Game.query.filter_by(status = 2).first()        
 
         if game is not None:
             players = PlayerInGame.query.filter(PlayerInGame.position != None).filter_by(game_id = game.id).order_by(PlayerInGame.position).all()
-            
+
             if not players:
                 player = PlayerInGame.query.filter_by(player_id = player_id).first()
                 player.position = 1
@@ -343,9 +371,9 @@ def post_player_position():
 
             return jsonify({ "message": "Posição mudada com sucesso." }), 200
         else:
-            return jsonify({ "message": "Não existe jogo ativo." }), 500
+            return jsonify({ "message": "Não existe jogo ativo." }), 400
     except:
-        return jsonify({ "message": "Erro ao tentar postar a posição do player." }), 500
+        return jsonify({ "message": "Erro ao tentar postar a posição do player." }), 400
 
 
 
