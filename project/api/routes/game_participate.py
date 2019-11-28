@@ -98,7 +98,7 @@ def get_game_participate():
         game = game_starting if game_starting else (game_in_progress if game_in_progress else None)
         
         if game is None:
-            return jsonify({"message": "No game found"}), 406
+            return jsonify({"message": "Não há jogo em andamento."}), 406
         
         response = {
             "game_id": game.id,

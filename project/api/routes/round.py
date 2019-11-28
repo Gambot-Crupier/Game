@@ -26,8 +26,10 @@ def get_id():
 def create_round():
     try:
         game = Game.query.filter_by(status = 2).first()
+        first_player = PlayerInGame.query.filter_by(position = 1).first()
+
         if game is not None:
-            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet = 5000)
+            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet = 5000, current_player_id=first_player.player_id)
             db.session.add(round_data)
             db.session.commit()
 
@@ -52,11 +54,11 @@ def create_round():
         else:
             return jsonify({
                 "message": "Não existe jogo ativo"
-            }), 400
+            }), 500
     except:
         return jsonify({
             "message": "Erro ao criar o round!"
-        }), 400
+        }), 500
 
 
 @round_blueprint.route('/get_player_money', methods=['GET'])
@@ -132,6 +134,7 @@ def leave_match():
     try:
         game_id = request.args.get('game_id')
         player_id = request.args.get('player_id')
+        round_id = request.args.get('round_id')
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
 
         if player_in_game is not None:
@@ -149,6 +152,8 @@ def leave_match():
                     'message': str(e)
                 }), 400
 
+
+            set_current_player_id(player_id, round_id)
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
         else:
             return jsonify({ "message": "Jogador não está no jogo!" }), 400
@@ -197,6 +202,7 @@ def raise_bet():
                             'message': str(e)
                         }), 400
 
+                    set_current_player_id(player_id, round_id)
                     return jsonify({"message":"Aposta Aumentada!"}), 200
                 else:
                     return jsonify({"message":"Você não possui dinheiro para aumentar tanto a aposta. Tente pagá-la."}), 500
@@ -236,6 +242,7 @@ def pay_bet():
                 player_in_game.money=0
 
                 db.session.commit()
+
                 data = {
                         'message': 'Novo turno'
                     }
@@ -247,6 +254,7 @@ def pay_bet():
                         'message': str(e)
                     }), 400
                     
+                set_current_player_id(player_id, round_id)
                 return jsonify({"message":"All In!"}), 200
             else:
                 current_round.total_bet_prize+=money_difference
@@ -254,6 +262,7 @@ def pay_bet():
                 player_in_game.bet=current_round.bet
 
                 db.session.commit()
+                set_current_player_id(player_id, round_id)
                 return jsonify({"message":"Aposta paga!"}), 200
 
         else:
@@ -264,3 +273,96 @@ def pay_bet():
             "error": "Erro ao tentar pagar a aposta!",
             "message": str(e)
         }), 400
+
+
+
+@round_blueprint.route('/distribuite_cards', methods=['GET'])
+def distribuite_cards():
+    try:
+        game = Game.query.filter_by(status = 2).first()
+        if game is not None:
+            round_data = Round.query.all()
+            return jsonify({'distribute_cards': str(round_data[-1].distribute_cards)}), 200
+
+        else:
+            return jsonify({
+                "message": "Não existe jogo ativo."
+            }), 500
+    except:
+        return jsonify({
+            "message": "Erro ao tentar recuperar se as cartas devem ser distribuídas!"
+        }), 500
+
+
+
+@round_blueprint.route('/get_round', methods=['GET'])
+def get_round():
+    try:
+        game = Game.query.filter_by(status = 2).first()
+
+        if game is not None:
+            round_data = Round.query.all()
+            current_round = round_data[-1]
+            return jsonify(
+                {
+                    'id': current_round.id,
+                    'game_id': current_round.game_id,
+                    'last_player_raised_bet': current_round.last_player_raised_bet,
+                    'distribute_cards': str(current_round.distribute_cards),
+                    'winner': current_round.winner,
+                }
+            ), 200
+
+        else:
+            return jsonify({ "message": "Não existe jogo ativo." }), 500
+    except:
+        return jsonify({ "message": "Erro ao tentar recuperar round!" }), 500
+
+
+
+
+@round_blueprint.route('/post_player_position', methods=['POST'])
+def post_player_position():
+    try:
+        player_id = request.args.get('player_id')
+        game = Game.query.filter_by(status = 2).first()
+
+        if game is not None:
+            players = PlayerInGame.query.filter(PlayerInGame.position != None).filter_by(game_id = game.id).order_by(PlayerInGame.position).all()
+            
+            if not players:
+                player = PlayerInGame.query.filter_by(player_id = player_id).first()
+                player.position = 1
+            else:
+                last_position = players[-1].position
+                player = PlayerInGame.query.filter_by(player_id = player_id).first()
+                if not player.position:
+                    player.position = (last_position+1)
+                
+            db.session.commit()
+
+            return jsonify({ "message": "Posição mudada com sucesso." }), 200
+        else:
+            return jsonify({ "message": "Não existe jogo ativo." }), 500
+    except:
+        return jsonify({ "message": "Erro ao tentar postar a posição do player." }), 500
+
+
+
+def set_current_player_id(player_id, round_id):
+
+    # Pega a posição deste player
+    player = PlayerInGame.query.filter_by(player_id = player_id).first()
+    current_position = player.position
+
+    next_player = PlayerInGame.query.filter_by(position = (current_position + 1)).first()
+    current_round = Round.query.filter_by(id=round_id).first()
+
+    # Caso seja o último, não haverá next_player
+    if not next_player:
+        first_player = PlayerInGame.query.filter_by(position = 1).first()
+        current_round.current_player_id = first_player.player_id
+    else:
+        current_round.current_player_id = next_player.player_id
+
+    db.session.commit()
