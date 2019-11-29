@@ -178,10 +178,11 @@ def leave_match():
 @round_blueprint.route('/raise_bet', methods=['POST'])
 def raise_bet():
     try:
-        game_id = request.args.get('game_id')
-        player_id = request.args.get('player_id')
-        round_id = request.args.get('round_id')
-        new_bet = int(request.args.get('value'))
+        data = request.get_json()
+        game_id = data['game_id']
+        player_id = data['player_id']
+        round_id = data['round_id']
+        new_bet = int(data['value'])
 
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
         current_round = Round.query.filter_by(id=round_id).first() 
