@@ -141,9 +141,10 @@ def get_player_bet():
 @round_blueprint.route('/leave_match', methods=['POST'])
 def leave_match():
     try:
-        game_id = request.args.get('game_id')
-        player_id = request.args.get('player_id')
-        round_id = request.args.get('round_id')
+        data = request.get_json()
+        game_id = data['game_id']
+        player_id = data['player_id']
+        round_id = data['round_id']
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
 
         if player_in_game is not None:
