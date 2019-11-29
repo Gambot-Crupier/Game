@@ -96,7 +96,6 @@ def get_round_bet():
     try:
         round_id = request.args.get('round_id')
         round_data = Round.query.filter_by(id=round_id).first()
-        print(round_data)
 
 
         if round_data is not None:
@@ -141,7 +140,10 @@ def get_player_bet():
 @round_blueprint.route('/leave_match', methods=['POST'])
 def leave_match():
     try:
+        print('aaaa')
         data = request.get_json()
+        print(data)
+
         game_id = data['game_id']
         player_id = data['player_id']
         round_id = data['round_id']
@@ -155,6 +157,8 @@ def leave_match():
                 'message': 'Novo turno'
             }
 
+            set_current_player_id(player_id, round_id)
+
             try:
                 message_app(data, game_id)
             except Exception as e:
@@ -163,7 +167,6 @@ def leave_match():
                 }), 400
 
 
-            set_current_player_id(player_id, round_id)
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
         else:
             return jsonify({ "message": "Jogador não está no jogo!" }), 400
@@ -202,6 +205,8 @@ def raise_bet():
                     
                     db.session.commit()
 
+                    set_current_player_id(player_id, round_id)
+
                     data = {
                         'message': 'Novo turno'
                     }
@@ -213,7 +218,6 @@ def raise_bet():
                             'message': str(e)
                         }), 400
 
-                    set_current_player_id(player_id, round_id)
                     return jsonify({"message":"Aposta Aumentada!"}), 200
                 else:
                     return jsonify({"message":"Você não possui dinheiro para aumentar tanto a aposta. Tente pagá-la."}), 500
@@ -255,6 +259,27 @@ def pay_bet():
                 player_in_game.money=0
 
                 db.session.commit()
+                    
+                set_current_player_id(player_id, round_id)
+
+                data = {
+                    'message': 'Novo turno'
+                }
+
+                try:
+                    message_app(data, game_id)
+                except Exception as e:
+                    return jsonify({
+                        'message': str(e)
+                    }), 40
+                return jsonify({"message":"All In!"}), 200
+            else:
+                current_round.total_bet_prize+=money_difference
+                player_in_game.money-=money_difference
+                player_in_game.bet=current_round.bet
+
+                db.session.commit()
+                set_current_player_id(player_id, round_id)
 
                 data = {
                         'message': 'Novo turno'
@@ -266,16 +291,6 @@ def pay_bet():
                     return jsonify({
                         'message': str(e)
                     }), 400
-                    
-                set_current_player_id(player_id, round_id)
-                return jsonify({"message":"All In!"}), 200
-            else:
-                current_round.total_bet_prize+=money_difference
-                player_in_game.money-=money_difference
-                player_in_game.bet=current_round.bet
-
-                db.session.commit()
-                set_current_player_id(player_id, round_id)
                 return jsonify({"message":"Aposta paga!"}), 200
 
         else:
