@@ -49,7 +49,7 @@ def create_round():
         first_player = PlayerInGame.query.filter_by(position = 1).first()
 
         if game is not None:
-            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet = 5000, current_player_id=first_player.player_id)
+            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet = 500, current_player_id=first_player.player_id)
             db.session.add(round_data)
             db.session.commit()
 
@@ -233,13 +233,15 @@ def raise_bet():
 @round_blueprint.route('/pay_bet', methods=['POST'])
 def pay_bet():
     try:
-        game_id = request.args.get('game_id')
-        player_id = request.args.get('player_id')
-        round_id = request.args.get('round_id')
-
+        data = request.get_json()
+        game_id = data['game_id']
+        player_id = data['player_id']
+        round_id = data['round_id']
 
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
         current_round = Round.query.filter_by(id=round_id).first()
+
+
 
         if player_in_game is not None:
             money_difference = current_round.bet - player_in_game.bet
