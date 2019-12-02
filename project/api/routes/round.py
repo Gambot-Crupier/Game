@@ -47,10 +47,9 @@ def redirect_round():
 def create_round():
     try:
         game = Game.query.filter_by(status = 2).first()
-        first_player = PlayerInGame.query.filter_by(position = 1).first()
 
         if game is not None:
-            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet = 500, current_player_id=first_player.player_id)
+            round_data = Round(game_id = game.id, small_blind = 250, big_blind = 500, bet = 500)
             db.session.add(round_data)
             db.session.commit()
 
@@ -413,3 +412,24 @@ def set_current_player_id(player_id, round_id):
         current_round.current_player_id = next_player.player_id
 
     db.session.commit()
+
+
+@round_blueprint.route('/start_round', methods=['POST'])
+def start_round():
+    try:
+        game = Game.query.filter_by(status = 2).first()
+
+        if game is not None:
+            rounds = Round.query.all()
+            current_round = rounds[-1]
+            
+            initial_player = PlayerInGame.query.filter_by(position=1, game_id=game.id).first()
+            current_round.current_player_id = initial_player.player_id
+
+            db.session.commit()
+            return jsonify({ "message": "Round começou!" }), 200
+
+        else:
+            return jsonify({ "message": "Não existe jogo ativo." }), 500
+    except:
+        return jsonify({ "message": "Erro ao tentar recuperar round!" }), 500
