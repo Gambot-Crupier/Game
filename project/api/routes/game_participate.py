@@ -163,6 +163,18 @@ def start_game():
         game_starting.status = 2 # Status do jogo mudado para "Em Progresso"
         db.session.commit()
 
+        data = {
+            'message': 'Reconhecer'
+        }
+
+        try:
+            message_app(data, game_starting.id)
+        except Exception as e:
+            print(str(e))
+            return jsonify({
+                'message': str(e)
+            }), 400
+
         return jsonify({"message": "Game Started"}), 200
 
     except Exception as e:
