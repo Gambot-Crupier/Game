@@ -3,6 +3,7 @@ from os.path import join, dirname, realpath
 from requests.exceptions import HTTPError
 from project.api.models import Game, PlayerInGame, Round
 from project.api.modules.firebase import subscribe_to_firebase, message_app
+from project.api.modules.game import check_active_players
 from project import db
 import json, sys
 from sqlalchemy import update
@@ -140,9 +141,7 @@ def get_player_bet():
 @round_blueprint.route('/leave_match', methods=['POST'])
 def leave_match():
     try:
-        print('aaaa')
         data = request.get_json()
-        print(data)
 
         game_id = data['game_id']
         player_id = data['player_id']
@@ -165,8 +164,9 @@ def leave_match():
                 return jsonify({
                     'message': str(e)
                 }), 400
-
-
+            
+            check_active_players(game_id)
+            
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
         else:
             return jsonify({ "message": "Jogador não está no jogo!" }), 400
