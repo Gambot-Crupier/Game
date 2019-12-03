@@ -247,8 +247,6 @@ def pay_bet():
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
         current_round = Round.query.filter_by(id=round_id).first()
 
-
-
         if player_in_game is not None:
             money_difference = current_round.bet - player_in_game.bet
 
@@ -430,6 +428,17 @@ def start_round():
             current_round.current_player_id = initial_player.player_id
 
             db.session.commit()
+            data = {
+                'message': 'Redireciona'
+            }
+
+            try:
+                message_app(data, game.id)
+            except Exception as e:
+                return jsonify({
+                'message': str(e)
+            }), 400
+
             return jsonify({ "message": "Round começou!" }), 200
 
         else:
