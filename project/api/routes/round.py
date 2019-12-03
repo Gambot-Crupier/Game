@@ -369,8 +369,8 @@ def get_current_player():
 @round_blueprint.route('/post_player_position', methods=['POST'])
 def post_player_position():
     try:
-        data = request.json()
-
+        data = request.get_json()
+        
         player_id = data['player_id']
         
         game = Game.query.filter_by(status = 2).first()        
