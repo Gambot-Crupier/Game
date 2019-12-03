@@ -21,9 +21,10 @@ class PlayerInGame(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), primary_key=True)
     player_id = db.Column(db.Integer, nullable=False, primary_key=True)
     device_id = db.Column(db.String(255), nullable=False)
-    money = db.Column(db.Integer)
+    money = db.Column(db.Integer, default = 5000)
     bet = db.Column(db.Float, default=0)
     is_playing_match = db.Column(db.Boolean, default=True)
+    position = db.Column(db.Integer)
 
     def __init__(self, game_id, player_id, device_id):
         self.game_id = game_id
@@ -41,3 +42,4 @@ class Round(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
     last_player_raised_bet = db.Column(db.Integer)
     distribute_cards = db.Column(db.Boolean, default=True)
+    current_player_id = db.Column(db.Integer, default=-1)

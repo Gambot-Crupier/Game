@@ -22,8 +22,13 @@ def post_game_participate():
         device_id = game_participate_json['device_id']
 
 
-        game_starting = Game.query.filter_by(status = 1).first()  
-        
+        try:
+            game_starting = Game.query.filter_by(status = 1).first()  
+        except Exception as e:
+            print(str(e))
+
+
+
         # Caso não haja um jogo no estado Iniciando
         if game_starting is None:
 
@@ -98,7 +103,7 @@ def get_game_participate():
         game = game_starting if game_starting else (game_in_progress if game_in_progress else None)
         
         if game is None:
-            return jsonify({"message": "No game found"}), 406
+            return jsonify({"message": "Não há jogo em andamento."}), 406
         
         response = {
             "game_id": game.id,
@@ -158,6 +163,18 @@ def start_game():
 
         game_starting.status = 2 # Status do jogo mudado para "Em Progresso"
         db.session.commit()
+
+        data = {
+            'message': 'Reconhecer'
+        }
+
+        try:
+            message_app(data, game_starting.id)
+        except Exception as e:
+            print(str(e))
+            return jsonify({
+                'message': str(e)
+            }), 400
 
         return jsonify({"message": "Game Started"}), 200
 
