@@ -3,7 +3,7 @@ from os.path import join, dirname, realpath
 from requests.exceptions import HTTPError
 from project.api.models import Game, PlayerInGame, Round
 from project.api.modules.firebase import subscribe_to_firebase, message_app
-from project.api.modules.game import check_active_players
+from project.api.modules.game import check_active_players, check_last_player_bet
 from project import db
 import json, sys
 from sqlalchemy import update
@@ -164,6 +164,7 @@ def leave_match():
                     'message': str(e)
                 }), 400
             
+            check_last_player_bet(round_id, player_id, game_id)
             check_active_players(game_id)
             
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
@@ -246,8 +247,6 @@ def pay_bet():
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
         current_round = Round.query.filter_by(id=round_id).first()
 
-
-
         if player_in_game is not None:
             money_difference = current_round.bet - player_in_game.bet
 
@@ -258,7 +257,8 @@ def pay_bet():
                 player_in_game.money=0
 
                 db.session.commit()
-                    
+
+                check_last_player_bet(round_id, player_id, game_id)    
                 set_current_player_id(player_id, round_id)
 
                 data = {
@@ -278,6 +278,7 @@ def pay_bet():
                 player_in_game.bet=current_round.bet
 
                 db.session.commit()
+                check_last_player_bet(round_id, player_id, game_id)
                 set_current_player_id(player_id, round_id)
 
                 data = {
@@ -427,6 +428,17 @@ def start_round():
             current_round.current_player_id = initial_player.player_id
 
             db.session.commit()
+            data = {
+                'message': 'Redireciona'
+            }
+
+            try:
+                message_app(data, game.id)
+            except Exception as e:
+                return jsonify({
+                'message': str(e)
+            }), 400
+
             return jsonify({ "message": "Round começou!" }), 200
 
         else:

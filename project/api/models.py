@@ -42,4 +42,4 @@ class Round(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
     last_player_raised_bet = db.Column(db.Integer)
     distribute_cards = db.Column(db.Boolean, default=True)
-    current_player_id = db.Column(db.Integer, default=-1)
+    current_player_id = db.Column(db.Integer, default=1)
