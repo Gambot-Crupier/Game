@@ -50,20 +50,15 @@ def check_endgame(winner_id, game_id):
 
         previous_round = Round.query.filter_by().all()
         previous_round = previous_round[-1]
-        print(previous_round)
         round_data = Round(game_id = game_id, small_blind = 250, big_blind = 500, bet = 500, current_player_id= -1)
         players_in_game = PlayerInGame.query.filter_by(game_id = game_id).all()
-        print(players_in_game)
 
         for player in players_in_game:
-            print(player)
             player.bet = 0
             player.is_playing_match = True
         
         winner = PlayerInGame.query.filter_by(player_id = winner_id).first()
-        print(winner)
         winner.money = winner.money + previous_round.total_bet_prize
-        print('risooooos')
 
         db.session.add(round_data)
         db.session.commit()
