@@ -71,7 +71,7 @@ def check_endgame(winner_id, game_id):
         
 
 
-def check_last_player_bet(round_id, player_id):
+def check_last_player_bet(round_id, player_id, game_id):
     round_data = Round.query.filter_by(id = round_id).first()
 
     if round_data.last_player_raised_bet == player_id:
@@ -80,10 +80,39 @@ def check_last_player_bet(round_id, player_id):
         cards_data = round_cards_request.json()
 
         if round_cards_request['number'] < 5:
-            round_data.distribute_cards = True;
+            round_data.distribute_cards = True
             db.session.commit()
         else:
-            print('ganhar jogo')
+            url = base_gateway_url + 'get_winner'
+            player_list = PlayerInGame.query.filter_by(game_id = game_id).all()
+            
+            request_data = {
+                'round_id': round_id,
+                'player_list': player_list
+            }
+
+            winner_request = requests.request("POST", url, json = request_data,
+                                            headers = {'Accept': 'application/json', 'content-type' : 'application/json'})
+
+            request_data = winner_request.json()
+
+            if winner_request.status_code == 200:
+
+                url = base_gateway_url + 'get_user_by_id?user_id=' + str(request_data['player_id'])
+                get_player_request = requests.request("GET", url)
+
+                player_data = get_player_request.json()
+
+
+                data = {
+                    'message': 'Endround',
+                    'winner': player_data['player']['name']
+                }
+
+                message_app(data, game_id)
+
+                check_endgame(request_data['player_id'], game_id)
+
 
 
     

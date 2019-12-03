@@ -164,7 +164,7 @@ def leave_match():
                     'message': str(e)
                 }), 400
             
-            check_last_player_bet(round_id, player_id)
+            check_last_player_bet(round_id, player_id, game_id)
             check_active_players(game_id)
             
             return jsonify({"message":"Jogador fugiu da partida!"}), 200
@@ -258,7 +258,7 @@ def pay_bet():
 
                 db.session.commit()
 
-                check_last_player_bet(round_id, player_id)    
+                check_last_player_bet(round_id, player_id, game_id)    
                 set_current_player_id(player_id, round_id)
 
                 data = {
@@ -278,7 +278,7 @@ def pay_bet():
                 player_in_game.bet=current_round.bet
 
                 db.session.commit()
-                check_last_player_bet(round_id, player_id)
+                check_last_player_bet(round_id, player_id, game_id)
                 set_current_player_id(player_id, round_id)
 
                 data = {
