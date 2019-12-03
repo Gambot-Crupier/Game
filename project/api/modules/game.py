@@ -1,4 +1,4 @@
-from project.api.models import PlayerInGame
+from project.api.models import PlayerInGame, Round
 from project.api.modules.firebase import message_app
 import requests, os, json, sys
 
@@ -25,7 +25,7 @@ def check_active_players(game_id):
 def check_last_player_bet(round_id, player_id):
     round_data = Round.query.filter_by(id = round_id).first()
 
-    if round_data.check_last_player_bet == player_id:
+    if round_data.last_player_raised_bet == player_id:
         url = base_gateway_url + 'get_round_cards_number?round_id' + str(round_id)
         round_cards_request = requests.request("GET", url)
         cards_data = round_cards_request.json()
