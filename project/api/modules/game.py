@@ -8,13 +8,17 @@ base_gateway_url = os.getenv('GAMBOT_GATEWAY_URL')
 def check_active_players(game_id):
     players = PlayerInGame.query.filter_by(game_id = game_id, is_playing_match = True).all()
     number_of_players = len(players)
+    print(number_of_players, file=sys.stderr)
+    print(players[0].player_id, file=sys.stderr)
 
     if number_of_players < 2:
         url = base_gateway_url + 'get_user_by_id?user_id=' + str(players[0].player_id)
         get_player_request = requests.request("GET", url)
+        print(get_player_request.status_code, file=sys.stderr)
         
         if get_player_request.status_code == 200:
             data = get_player_request.json()
+            print(data, file=sys.stderr)
 
             data = {
                 'message': 'Fugiram',
