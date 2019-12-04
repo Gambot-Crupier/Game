@@ -12,9 +12,11 @@ class Game(db.Model):
     status = db.Column(db.Integer, nullable= False)
     player_in_game = db.relationship('PlayerInGame', backref='game', lazy=True)
     rounds = db.relationship('Round')
-    
+    continued = db.Column(db.Integer, nullable= False)
+
     def __init__(self):
         self.status  = 1
+        self.continued = 0
 
 
 class PlayerInGame(db.Model):
