@@ -321,7 +321,7 @@ def get_continue():
         else:
             return jsonify({
                 "message": "Não existe jogo ativo."
-            }), 500
+            }), 204
 
     except:
         return jsonify({

@@ -162,6 +162,8 @@ def start_game():
             player.money = 10000 # Valor Inicial de dinheiro dos jogadores
 
         game_starting.status = 2 # Status do jogo mudado para "Em Progresso"
+        game_starting.continued = 1 
+
         db.session.commit()
 
         data = {
