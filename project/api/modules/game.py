@@ -83,13 +83,15 @@ def check_last_player_bet(round_id, player_id, game_id):
 
     if round_data.last_player_raised_bet == player_id:
         print('requisisao', file = sys.stderr)
-        url = base_gateway_url + 'get_round_cards_number?round_id' + str(round_id)
+        url = base_gateway_url + 'get_round_cards_number?round_id=' + str(round_id)
         round_cards_request = requests.request("GET", url)
         print(round_cards_request.status_code, file = sys.stderr)
         cards_data = round_cards_request.json()
         print(cards_data, file=sys.stderr)
+        print(cards_data['number'], file=sys.stderr)
+        print(cards_data['number']['number'], file=sys.stderr)
 
-        if round_cards_request['number'] < 5:
+        if cards_data['number']['number'] < 5:
             round_data.distribute_cards = True
             game.continued = 3
             db.session.commit()
