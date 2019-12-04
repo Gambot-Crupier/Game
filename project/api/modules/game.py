@@ -76,13 +76,18 @@ def check_endgame(winner_id, game_id):
 
 
 def check_last_player_bet(round_id, player_id, game_id):
+    print('checklastplayerbet', file = sys.stderr)
     round_data = Round.query.filter_by(id = round_id).first()
     game = Game.query.filter_by(status = 2).first()
+    
 
     if round_data.last_player_raised_bet == player_id:
+        print('requisisao', file = sys.stderr)
         url = base_gateway_url + 'get_round_cards_number?round_id' + str(round_id)
         round_cards_request = requests.request("GET", url)
+        print(round_cards_request.status_code, file = sys.stderr)
         cards_data = round_cards_request.json()
+        print(cards_data, file=sys.stderr)
 
         if round_cards_request['number'] < 5:
             round_data.distribute_cards = True

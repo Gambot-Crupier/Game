@@ -243,12 +243,18 @@ def pay_bet():
         game_id = data['game_id']
         player_id = data['player_id']
         round_id = data['round_id']
+        print('gameid' + game_id, file= sys.stderr)
+        print('playerid' + player_id, file= sys.stderr)
+        print('roundid' + round_id, file= sys.stderr)
 
         player_in_game = PlayerInGame.query.filter_by(game_id=game_id, player_id=player_id).first()
         current_round = Round.query.filter_by(id=round_id).first()
+        print('playeringame' + player_in_game, file= sys.stderr)
+        print('currentround' + current_round, file= sys.stderr)
 
         if player_in_game is not None:
             money_difference = current_round.bet - player_in_game.bet
+            print('money' + money_difference, file= sys.stderr)
 
             # Caso seja All In
             if player_in_game.money < money_difference:
@@ -273,9 +279,13 @@ def pay_bet():
                     }), 40
                 return jsonify({"message":"All In!"}), 200
             else:
+                print('aaaa', file= sys.stderr)
                 current_round.total_bet_prize+=money_difference
+                print('totalbet' + current_round.total_bet_prize, file= sys.stderr)
                 player_in_game.money-=money_difference
+                print('moneyplayer' + player_in_game.money, file = sys.stderr)
                 player_in_game.bet=current_round.bet
+                print('bet' + player_in_game.bet, file = sys.stderr)
 
                 db.session.commit()
                 check_last_player_bet(round_id, player_id, game_id)
