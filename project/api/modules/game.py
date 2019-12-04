@@ -27,6 +27,10 @@ def check_active_players(game_id):
 
             message_app(data, game_id)
 
+            game = Game.query.filter_by(status = 2).first()
+            game.continued = 4
+            db.session.commit()
+
             check_endgame(players[0].player_id, game_id)
 
 def check_endgame(winner_id, game_id):
@@ -132,6 +136,7 @@ def check_last_player_bet(round_id, player_id, game_id):
                 message_app(data, game_id)
 
                 game.continued = 4
+                db.session.commit()
 
                 check_endgame(request_data['winner'], game_id)
 

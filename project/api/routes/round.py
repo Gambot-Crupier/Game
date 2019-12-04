@@ -355,7 +355,7 @@ def distribuite_cards():
     try:
         game = Game.query.filter_by(status = 2).first()
         if game is not None:
-            round_data = Round.query.all()
+            round_data = Round.query.order_by(Round.id).all()
             return jsonify({'distribute_cards': str(round_data[-1].distribute_cards)}), 200
 
         else:
@@ -375,7 +375,7 @@ def get_round():
         game = Game.query.filter_by(status = 2).first()
 
         if game is not None:
-            round_data = Round.query.all()
+            round_data = Round.query.order_by(Round.id).all()
             current_round = round_data[-1]
             return jsonify(
                 {
@@ -468,9 +468,11 @@ def start_round():
         game = Game.query.filter_by(status = 2).first()
 
         if game is not None:
-            rounds = Round.query.all()
+            rounds = Round.query.order_by(Round.id).all()
+            print(game.id, file=sys.stderr)
             current_round = rounds[-1]
-            
+            print(current_round, file=sys.stderr)
+
             initial_player = PlayerInGame.query.filter_by(position=1, game_id=game.id).first()
             current_round.current_player_id = initial_player.player_id
 
@@ -490,5 +492,6 @@ def start_round():
 
         else:
             return jsonify({ "message": "Não existe jogo ativo." }), 500
-    except:
+    except Exception as e:
+        print(e, file=sys.stderr)
         return jsonify({ "message": "Erro ao tentar recuperar round!" }), 500
