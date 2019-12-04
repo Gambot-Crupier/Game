@@ -303,6 +303,50 @@ def pay_bet():
         }), 400
 
 
+# Distribuição
+# 1 = Start
+# 2 = Stop
+# 3 = Go
+# 4 = Reset
+
+@round_blueprint.route('/get_continue', methods=['GET'])
+def get_continue():
+    try:
+        game = Game.query.filter_by(status = 2).first()
+        if game is not None:
+            print(game, file = sys.stderr)
+            game_data = Game.query.all()
+
+            return jsonify({'continue': str(game_data[-1].continued)}), 200
+        else:
+            return jsonify({
+                "message": "Não existe jogo ativo."
+            }), 500
+
+    except:
+        return jsonify({
+            "message": "Erro ao retornar as ações para eletronica."
+        }), 500
+
+
+@round_blueprint.route('/post_continue', methods=['POST'])
+def post_continue():
+    try:
+        data = request.get_json()
+        continued = data['continue']
+        game = Game.query.filter_by(status = 2).first()  
+
+        if game is not None:
+            game.continued = continued
+            db.session.commit()
+
+            return jsonify({ "message": "Atributo mudado com sucesso." }), 200
+        else:
+            return jsonify({ "message": "Não existe jogo ativo." }), 400
+    except Exception as e:
+        print(e, file= sys.stderr)  
+        return jsonify({ "message": "Erro ao tentar postar as ações." }), 400
+
 
 @round_blueprint.route('/distribuite_cards', methods=['GET'])
 def distribuite_cards():
