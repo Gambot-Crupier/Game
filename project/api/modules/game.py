@@ -73,6 +73,7 @@ def check_endgame(winner_id, game_id):
 
 def check_last_player_bet(round_id, player_id, game_id):
     round_data = Round.query.filter_by(id = round_id).first()
+    game = Game.query.filter_by(status = 2).first()
 
     if round_data.last_player_raised_bet == player_id:
         url = base_gateway_url + 'get_round_cards_number?round_id' + str(round_id)
@@ -81,6 +82,7 @@ def check_last_player_bet(round_id, player_id, game_id):
 
         if round_cards_request['number'] < 5:
             round_data.distribute_cards = True
+            game.continued = 3
             db.session.commit()
         else:
             url = base_gateway_url + 'get_winner'
@@ -103,13 +105,14 @@ def check_last_player_bet(round_id, player_id, game_id):
 
                 player_data = get_player_request.json()
 
-
                 data = {
                     'message': 'Endround',
                     'winner': player_data['player']['name']
                 }
 
                 message_app(data, game_id)
+
+                game.continued = 4
 
                 check_endgame(request_data['player_id'], game_id)
 
