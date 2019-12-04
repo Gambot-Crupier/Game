@@ -288,6 +288,7 @@ def pay_bet():
                 try:
                     message_app(data, game_id)
                 except Exception as e:
+                    print(str(e), file = sys.stderr)
                     return jsonify({
                         'message': str(e)
                     }), 400
