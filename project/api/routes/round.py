@@ -456,10 +456,17 @@ def set_current_player_id(player_id, round_id):
     if not next_player:
         first_player = PlayerInGame.query.filter_by(position = 1).first()
         current_round.current_player_id = first_player.player_id
+        is_playing_match = first_player.is_playing_match
+        current_player = first_player.player_id
     else:
         current_round.current_player_id = next_player.player_id
+        is_playing_match = next_player.is_playing_match
+        current_player = next_player.player_id
 
     db.session.commit()
+
+    if is_playing_match != True:
+        set_current_player_id(current_player, round_id)
 
 
 @round_blueprint.route('/start_round', methods=['POST'])
