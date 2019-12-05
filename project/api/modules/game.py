@@ -27,6 +27,10 @@ def check_active_players(game_id):
 
             message_app(data, game_id)
 
+            game = Game.query.filter_by(status = 2).first()
+            game.continued = 4
+            db.session.commit()
+
             check_endgame(players[0].player_id, game_id)
 
 def check_endgame(winner_id, game_id):
@@ -85,11 +89,11 @@ def check_last_player_bet(round_id, player_id, game_id):
         print('requisisao', file = sys.stderr)
         url = base_gateway_url + 'get_round_cards_number?round_id=' + str(round_id)
         round_cards_request = requests.request("GET", url)
-        print(round_cards_request.status_code, file = sys.stderr)
         cards_data = round_cards_request.json()
         print(cards_data, file=sys.stderr)
         print(cards_data['number'], file=sys.stderr)
         print(cards_data['number']['number'], file=sys.stderr)
+
 
         if cards_data['number']['number'] < 5:
             round_data.distribute_cards = True
@@ -101,17 +105,28 @@ def check_last_player_bet(round_id, player_id, game_id):
             
             request_data = {
                 'round_id': round_id,
-                'player_list': player_list
+                'players': []
             }
+
+            for player in player_list:
+                player = { 'id': player.player_id }
+                request_data['players'].append(player)
+
+            print('\n\n\nRequest_data', file = sys.stderr)
+            
+
 
             winner_request = requests.request("POST", url, json = request_data,
                                             headers = {'Accept': 'application/json', 'content-type' : 'application/json'})
 
-            request_data = winner_request.json()
+            print(winner_request.status_code, file = sys.stderr)
+
 
             if winner_request.status_code == 200:
+                request_data = winner_request.json()
+                print(request_data, file = sys.stderr)
 
-                url = base_gateway_url + 'get_user_by_id?user_id=' + str(request_data['player_id'])
+                url = base_gateway_url + 'get_user_by_id?user_id=' + str(request_data['winner'])
                 get_player_request = requests.request("GET", url)
 
                 player_data = get_player_request.json()
@@ -124,8 +139,9 @@ def check_last_player_bet(round_id, player_id, game_id):
                 message_app(data, game_id)
 
                 game.continued = 4
+                db.session.commit()
 
-                check_endgame(request_data['player_id'], game_id)
+                check_endgame(request_data['winner'], game_id)
 
 
 
