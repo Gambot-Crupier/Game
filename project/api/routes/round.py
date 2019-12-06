@@ -476,6 +476,43 @@ def set_current_player_id(player_id, round_id):
     if is_playing_match != True:
         set_current_player_id(current_player, round_id)
 
+@round_blueprint.route('/get_round_actions', methods=['GET'])
+def get_actions():
+    game = Game.query.filter_by(status = 2).first()
+
+    if game is not None:
+        player_list = PlayerInGame.query.filter_by(game_id = game.id).all()
+
+        response_data = []
+
+        for player in player_list:
+            url = base_gateway_url + 'get_user_by_id?user_id=' + str(player.player_id)
+            get_player_request = requests.request("GET", url)
+            
+            if get_player_request.status_code == 200:
+                data = get_player_request.json()
+                if player.is_playing_match == True:
+                    player_data = {
+                        'name': data['player']['name'],
+                        'id': player.player_id,
+                        'action': str(player.bet)
+                    }
+                else:
+                    player_data = {
+                        'name': data['player']['name'],
+                        'id': player.player_id,
+                        'action': 'Fugiu'
+                    }
+            response_data.append(player_data)
+
+        return jsonify({
+            'players': response_data
+        }), 200
+            
+    else:
+        return jsonify({
+            "message": "Não existe jogo ativo"
+        }), 400
 
 @round_blueprint.route('/start_round', methods=['POST'])
 def start_round():
